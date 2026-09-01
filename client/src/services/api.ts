@@ -25,7 +25,9 @@ import {
 } from '../types/analytics';
 import { UserSubscriptionSummary, SubscriptionPlan } from '../types/subscription';
 
-const API_BASE_URL = '/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api/v1` 
+  : (import.meta.env.PROD ? 'https://astrologer-api-r3ix.onrender.com/api/v1' : '/api/v1');
 
 let accessToken: string | null = localStorage.getItem('astrologer_access_token');
 
