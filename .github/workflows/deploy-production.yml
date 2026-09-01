@@ -1,0 +1,36 @@
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  deploy_production:
+    name: Production Deployment (Manual Approval)
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://app.astrologer.ai
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install & Build
+        run: |
+          npm --prefix server ci && npm --prefix server run build
+          npm --prefix client ci && npm --prefix client run build
+
+      - name: Zero Secret Leak Audit
+        run: |
+          ! grep -rnE "(AI_API_KEY|RAZORPAY_KEY_SECRET|JWT_ACCESS_SECRET|JWT_REFRESH_SECRET|MONGODB_URI|SMTP_PASSWORD)" client/dist/
+
+      - name: Deploy to Production Cloud Cluster
+        run: |
+          echo "Executing zero-downtime rolling update on Production Cluster..."

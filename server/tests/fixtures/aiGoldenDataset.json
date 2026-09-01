@@ -1,0 +1,62 @@
+[
+  {
+    "id": "q1_career",
+    "query": "Will I get promoted in my job this year?",
+    "expectedIntent": "CAREER",
+    "expectedDivisions": ["D1", "D10"]
+  },
+  {
+    "id": "q2_marriage",
+    "query": "When will I get married and what is my future spouse like?",
+    "expectedIntent": "MARRIAGE",
+    "expectedDivisions": ["D1", "D9"]
+  },
+  {
+    "id": "q3_education",
+    "query": "Will I clear the university entrance exam and get admission?",
+    "expectedIntent": "EDUCATION",
+    "expectedDivisions": ["D1", "D24"]
+  },
+  {
+    "id": "q4_finance",
+    "query": "Will my stock investments and wealth increase?",
+    "expectedIntent": "FINANCE",
+    "expectedDivisions": ["D1", "D2", "D10"]
+  },
+  {
+    "id": "q5_health",
+    "query": "What are my constitutional vitality and health indicators?",
+    "expectedIntent": "HEALTH",
+    "expectedDivisions": ["D1", "D30"]
+  },
+  {
+    "id": "q6_dasha",
+    "query": "Which mahadasha and antardasha period am I running?",
+    "expectedIntent": "DASHA",
+    "expectedDivisions": ["D1"]
+  },
+  {
+    "id": "q7_transit",
+    "query": "Is Saturn Sade Sati or Kantaka Shani active right now?",
+    "expectedIntent": "TRANSIT",
+    "expectedDivisions": ["D1"]
+  },
+  {
+    "id": "q8_yogas",
+    "query": "Do I have Gaja Kesari Yoga or Pancha Mahapurusha Yoga in my chart?",
+    "expectedIntent": "YOGA",
+    "expectedDivisions": ["D1"]
+  },
+  {
+    "id": "q9_remedy",
+    "query": "What peaceful Vedic remedies can pacify my active planetary period?",
+    "expectedIntent": "REMEDY",
+    "expectedDivisions": ["D1"]
+  },
+  {
+    "id": "q10_compatibility",
+    "query": "Please check our 36-point Ashtakoota Kundli Milan and Kuja Dosha.",
+    "expectedIntent": "COMPATIBILITY",
+    "expectedDivisions": ["D1", "D9"]
+  }
+]

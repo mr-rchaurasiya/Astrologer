@@ -1,0 +1,32 @@
+# Astrologer Robots Exclusion Protocol
+User-agent: *
+Allow: /
+Allow: /kundli-online
+Allow: /vedic-astrology
+Allow: /ai-astrologer
+Allow: /astrology-reports
+Allow: /blog
+Allow: /blog/*
+Allow: /shared/kundli/*
+
+# Disallow private authenticated application routes
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /kundli
+Disallow: /kundli/*
+Disallow: /chat
+Disallow: /chat/*
+Disallow: /analytics
+Disallow: /analytics/*
+Disallow: /reports
+Disallow: /reports/*
+Disallow: /settings
+Disallow: /settings/*
+Disallow: /profile
+Disallow: /profile/*
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /api/
+Disallow: /api/*
+
+Sitemap: https://astrologer.app/sitemap.xml

@@ -1,0 +1,58 @@
+{
+  "short_name": "Astrologer",
+  "name": "Astrologer — Vedic Astrology Intelligence & AI Consultation",
+  "description": "High-precision deterministic Vedic Astrology calculations (Lahiri Ayanamsa, D1/D9/D10, Vimshottari Dasha) paired with intelligent AI astrology consultation and Life Curve analytics.",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/dashboard",
+  "scope": "/",
+  "background_color": "#07090E",
+  "theme_color": "#C89D3C",
+  "display": "standalone",
+  "orientation": "any",
+  "categories": ["lifestyle", "utilities", "astrology"],
+  "shortcuts": [
+    {
+      "name": "View Kundli Chart",
+      "short_name": "Kundli",
+      "url": "/kundli",
+      "description": "Calculate and view your Vedic Kundli birth chart"
+    },
+    {
+      "name": "AI Astrology Consultation",
+      "short_name": "AI Astrologer",
+      "url": "/chat",
+      "description": "Ask questions to the Vedic AI Astrologer"
+    },
+    {
+      "name": "Life Curve Analytics",
+      "short_name": "Life Curve",
+      "url": "/analytics",
+      "description": "Explore multi-decade planetary vitality and transits"
+    },
+    {
+      "name": "Astrology Reports",
+      "short_name": "Reports",
+      "url": "/reports",
+      "description": "Generate comprehensive Vedic horoscope dossiers"
+    }
+  ]
+}

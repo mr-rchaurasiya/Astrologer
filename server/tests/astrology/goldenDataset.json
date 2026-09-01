@@ -1,0 +1,89 @@
+[
+  {
+    "id": "chart_1_delhi_noon",
+    "description": "Standard New Delhi noon birth in 1990",
+    "input": {
+      "dateOfBirth": "1990-05-15",
+      "timeOfBirth": "12:00:00",
+      "latitude": 28.6139,
+      "longitude": 77.2090,
+      "timezone": "Asia/Kolkata",
+      "timezoneOffset": 5.5
+    },
+    "expected": {
+      "ascendantSign": "Capricorn",
+      "moonSign": "Capricorn",
+      "sunSign": "Taurus",
+      "startingDashaLord": "Sun",
+      "totalDashaYears": 120
+    }
+  },
+  {
+    "id": "chart_2_london_midnight",
+    "description": "London midnight birth in leap year 2000",
+    "input": {
+      "dateOfBirth": "2000-02-29",
+      "timeOfBirth": "00:00:00",
+      "latitude": 51.5074,
+      "longitude": -0.1278,
+      "timezone": "Europe/London",
+      "timezoneOffset": 0
+    },
+    "expected": {
+      "ascendantSign": "Aries",
+      "sunSign": "Aquarius",
+      "totalDashaYears": 120
+    }
+  },
+  {
+    "id": "chart_3_equator_singapore",
+    "description": "Singapore near-equator birth in 1985",
+    "input": {
+      "dateOfBirth": "1985-11-20",
+      "timeOfBirth": "06:30:00",
+      "latitude": 1.3521,
+      "longitude": 103.8198,
+      "timezone": "Asia/Singapore",
+      "timezoneOffset": 8.0
+    },
+    "expected": {
+      "ascendantSign": "Aries",
+      "sunSign": "Scorpio",
+      "totalDashaYears": 120
+    }
+  },
+  {
+    "id": "chart_4_southern_ushuaia",
+    "description": "Extreme southern hemisphere birth in Argentina",
+    "input": {
+      "dateOfBirth": "1995-08-10",
+      "timeOfBirth": "22:15:00",
+      "latitude": -54.8019,
+      "longitude": -68.3030,
+      "timezone": "America/Argentina/Ushuaia",
+      "timezoneOffset": -3.0
+    },
+    "expected": {
+      "ascendantSign": "Virgo",
+      "sunSign": "Cancer",
+      "totalDashaYears": 120
+    }
+  },
+  {
+    "id": "chart_5_tokyo_retrograde",
+    "description": "Tokyo birth with active outer planet retrogrades in 1978",
+    "input": {
+      "dateOfBirth": "1978-07-07",
+      "timeOfBirth": "18:45:00",
+      "latitude": 35.6762,
+      "longitude": 139.6503,
+      "timezone": "Asia/Tokyo",
+      "timezoneOffset": 9.0
+    },
+    "expected": {
+      "ascendantSign": "Gemini",
+      "sunSign": "Gemini",
+      "totalDashaYears": 120
+    }
+  }
+]

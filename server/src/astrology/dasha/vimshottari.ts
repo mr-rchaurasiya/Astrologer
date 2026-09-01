@@ -1,0 +1,129 @@
+import { PlanetName, DashaPeriod, VimshottariDashaTree } from '../types/astrology';
+import { getNakshatraFromLongitude, NAKSHATRA_SPAN } from '../nakshatra/nakshatras';
+
+export interface VimshottariLordRule {
+  lord: PlanetName;
+  years: number;
+}
+
+export const VIMSHOTTARI_LORDS: VimshottariLordRule[] = [
+  { lord: 'Ketu', years: 7 },
+  { lord: 'Venus', years: 20 },
+  { lord: 'Sun', years: 6 },
+  { lord: 'Moon', years: 10 },
+  { lord: 'Mars', years: 7 },
+  { lord: 'Rahu', years: 18 },
+  { lord: 'Jupiter', years: 16 },
+  { lord: 'Saturn', years: 19 },
+  { lord: 'Mercury', years: 17 },
+];
+
+export const TOTAL_VIMSHOTTARI_YEARS = 120;
+const DAYS_PER_YEAR = 365.2425; // standard astronomical tropical year
+
+/**
+ * Adds fractional years to a Date
+ */
+const addYearsToDate = (startDate: Date, years: number): Date => {
+  const msToAdd = years * DAYS_PER_YEAR * 24 * 3600 * 1000;
+  return new Date(startDate.getTime() + msToAdd);
+};
+
+/**
+ * Generates the full 3-level hierarchical Vimshottari Dasha Tree (Maha, Antar, Pratyantar)
+ */
+export const calculateVimshottariDasha = (
+  moonLongitude: number,
+  birthUtcDate: Date
+): VimshottariDashaTree => {
+  const nakshatraInfo = getNakshatraFromLongitude(moonLongitude);
+  const startingLord = nakshatraInfo.lord;
+
+  // Find index of starting lord
+  const startingLordIndex = VIMSHOTTARI_LORDS.findIndex((l) => l.lord === startingLord);
+  const startingLordRule = VIMSHOTTARI_LORDS[startingLordIndex];
+
+  // Fraction of nakshatra remaining at birth
+  const elapsedFraction = nakshatraInfo.degreeInNakshatra / NAKSHATRA_SPAN;
+  const remainingFraction = 1.0 - elapsedFraction;
+  const balanceAtBirthYears = remainingFraction * startingLordRule.years;
+
+  const mahadashas: DashaPeriod[] = [];
+  let currentPeriodStart = new Date(birthUtcDate.getTime());
+
+  // Generate 9 Mahadashas (covering full 120-year cycle from birth)
+  for (let i = 0; i < 9; i++) {
+    const lordIdx = (startingLordIndex + i) % 9;
+    const rule = VIMSHOTTARI_LORDS[lordIdx];
+
+    // For the first Mahadasha at birth, only the remaining balance is active
+    const mahaDuration = i === 0 ? balanceAtBirthYears : rule.years;
+    const mahaEndDate = addYearsToDate(currentPeriodStart, mahaDuration);
+
+    // Calculate Antardashas
+    const antardashas: DashaPeriod[] = [];
+    let currentAntarStart = new Date(currentPeriodStart.getTime());
+
+    // 9 Antardashas starting with the Mahadasha lord
+    for (let j = 0; j < 9; j++) {
+      const antarLordIdx = (lordIdx + j) % 9;
+      const antarRule = VIMSHOTTARI_LORDS[antarLordIdx];
+
+      // Full proportional duration
+      const fullAntarDuration = (rule.years * antarRule.years) / TOTAL_VIMSHOTTARI_YEARS;
+      
+      // If we are in the first partial Mahadasha, scale or bound antardashas proportionally
+      const antarDuration = (mahaDuration / rule.years) * fullAntarDuration;
+      const antarEndDate = addYearsToDate(currentAntarStart, antarDuration);
+
+      // Calculate Pratyantardashas
+      const pratyantardashas: DashaPeriod[] = [];
+      let currentPratyantarStart = new Date(currentAntarStart.getTime());
+
+      for (let k = 0; k < 9; k++) {
+        const pratyantarLordIdx = (antarLordIdx + k) % 9;
+        const pratyantarRule = VIMSHOTTARI_LORDS[pratyantarLordIdx];
+
+        const pratyantarDuration =
+          (antarDuration / antarRule.years) *
+          ((antarRule.years * pratyantarRule.years) / TOTAL_VIMSHOTTARI_YEARS);
+        const pratyantarEndDate = addYearsToDate(currentPratyantarStart, pratyantarDuration);
+
+        pratyantardashas.push({
+          lord: pratyantarRule.lord,
+          startDate: currentPratyantarStart.toISOString(),
+          endDate: pratyantarEndDate.toISOString(),
+          durationYears: pratyantarDuration,
+        });
+
+        currentPratyantarStart = antarEndDate < pratyantarEndDate ? antarEndDate : pratyantarEndDate;
+      }
+
+      antardashas.push({
+        lord: antarRule.lord,
+        startDate: currentAntarStart.toISOString(),
+        endDate: antarEndDate.toISOString(),
+        durationYears: antarDuration,
+        subPeriods: pratyantardashas,
+      });
+
+      currentAntarStart = mahaEndDate < antarEndDate ? mahaEndDate : antarEndDate;
+    }
+
+    mahadashas.push({
+      lord: rule.lord,
+      startDate: currentPeriodStart.toISOString(),
+      endDate: mahaEndDate.toISOString(),
+      durationYears: mahaDuration,
+      subPeriods: antardashas,
+    });
+
+    currentPeriodStart = mahaEndDate;
+  }
+
+  return {
+    balanceAtBirthYears,
+    startingLord,
+    mahadashas,
+  };
+};
