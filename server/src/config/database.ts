@@ -52,15 +52,19 @@ export const connectDatabase = async (customUri?: string): Promise<void> => {
       console.warn(`⚠️ Could not connect to local MongoDB daemon (${error.message}).`);
       console.log('🚀 Starting in-memory MongoDB engine for seamless development...');
       try {
-        const { MongoMemoryServer } = await import('mongodb-memory-server');
-        if (!memoryServer) {
+        const modName = 'mongodb-memory-server';
+        const memModule: any = await import(/* @vite-ignore */ modName);
+        const MongoMemoryServer = memModule.MongoMemoryServer;
+        if (!memoryServer && MongoMemoryServer) {
           memoryServer = await MongoMemoryServer.create();
         }
-        const memUri = memoryServer.getUri();
-        await mongoose.connect(memUri, MONGO_OPTIONS);
-        isConnected = true;
-        console.log(`📦 In-Memory MongoDB Connected successfully at: ${memUri}`);
-        return;
+        if (memoryServer) {
+          const memUri = memoryServer.getUri();
+          await mongoose.connect(memUri, MONGO_OPTIONS);
+          isConnected = true;
+          console.log(`📦 In-Memory MongoDB Connected successfully at: ${memUri}`);
+          return;
+        }
       } catch (memErr: any) {
         console.error('❌ Failed to start in-memory MongoDB:', memErr.message || memErr);
       }
