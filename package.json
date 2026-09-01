@@ -13,7 +13,8 @@
     "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run dev:server\" \"npm run dev:client\"",
     "build:server": "npm --prefix server run build",
     "build:client": "npm --prefix client run build",
-    "build": "npm run build:server && npm run build:client",
+    "build": "npm --prefix client run build",
+    "build:all": "npm --prefix server run build && npm --prefix client run build",
     "test:server": "npm --prefix server run test",
     "test:client": "npm --prefix client run test",
     "test": "npm run test:server && npm run test:client"
