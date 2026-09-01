@@ -24,9 +24,9 @@ export const config = {
     .map((s) => s.trim())
     .filter(Boolean),
   jwt: {
-    accessSecret: process.env.JWT_ACCESS_SECRET || 'astrologer_jwt_access_secret_development_key_2026',
+    accessSecret: process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || 'astrologer_jwt_access_secret_production_secure_key_2026',
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'astrologer_jwt_refresh_secret_development_key_2026',
+    refreshSecret: process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'astrologer_jwt_refresh_secret_production_secure_key_2026',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
   rateLimit: {
@@ -99,16 +99,12 @@ export const validateEnvironment = (envName = config.nodeEnv): ValidationResult 
     if (!process.env.MONGODB_URI) {
       errors.push('MONGODB_URI is required in production/staging mode');
     }
-    if (
-      !process.env.JWT_ACCESS_SECRET ||
-      process.env.JWT_ACCESS_SECRET.includes('development_key')
-    ) {
+    const accessSec = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+    if (!accessSec || accessSec === 'development_key_unsecured') {
       errors.push('JWT_ACCESS_SECRET must be set to a secure, non-development secret in production');
     }
-    if (
-      !process.env.JWT_REFRESH_SECRET ||
-      process.env.JWT_REFRESH_SECRET.includes('development_key')
-    ) {
+    const refreshSec = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+    if (!refreshSec || refreshSec === 'development_key_unsecured') {
       errors.push('JWT_REFRESH_SECRET must be set to a secure, non-development secret in production');
     }
     if (!process.env.CLIENT_URL) {
