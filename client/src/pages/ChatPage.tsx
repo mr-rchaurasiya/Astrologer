@@ -555,11 +555,12 @@ export const ChatPage: React.FC = () => {
         style={{
           flex: 1,
           display: 'grid',
-          gridTemplateColumns: isSidebarOpen ? '280px 1fr' : '1fr',
+          gridTemplateColumns: isSidebarOpen ? '280px minmax(0, 1fr)' : 'minmax(0, 1fr)',
           borderRadius: '12px',
           border: '1px solid var(--border-medium)',
           overflow: 'hidden',
           minHeight: 0,
+          minWidth: 0,
           transition: 'grid-template-columns 0.2s ease',
         }}
       >
@@ -583,6 +584,8 @@ export const ChatPage: React.FC = () => {
             flexDirection: 'column',
             height: '100%',
             minHeight: 0,
+            minWidth: 0,
+            overflow: 'hidden',
             background: 'rgba(13, 17, 24, 0.7)',
             fontSize: fontSizeMap[textSize],
           }}
@@ -593,8 +596,10 @@ export const ChatPage: React.FC = () => {
             style={{
               flex: 1,
               overflowY: 'auto',
+              overflowX: 'hidden',
               padding: '16px 20px',
               minHeight: 0,
+              minWidth: 0,
             }}
           >
             {/* Error Alert */}

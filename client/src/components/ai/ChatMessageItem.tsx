@@ -10,45 +10,203 @@ interface ChatMessageItemProps {
 export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => {
   const isUser = message.role === 'user';
 
-  // Format basic markdown (bold, italic, lists, paragraphs) safely without arbitrary HTML
-  const formatContent = (text: string) => {
-    const lines = text.split('\n');
-    return lines.map((line, lIdx) => {
-      // Heading 3 / ###
-      if (line.startsWith('### ')) {
+  // Helper to parse inline bold (**text**), italics (*text*), and code (`text`)
+  const parseInlineMarkdown = (text: string): React.ReactNode => {
+    // Regex matches **bold**, *italic*, `code`, or regular text
+    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
+    return parts.map((part, pIdx) => {
+      if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+        return <strong key={pIdx} style={{ color: 'var(--accent-gold, #F5D061)', fontWeight: 600 }}>{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+        return <em key={pIdx} style={{ fontStyle: 'italic', color: '#E2E8F0' }}>{part.slice(1, -1)}</em>;
+      }
+      if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
         return (
-          <h4 key={lIdx} style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--accent-gold)', marginTop: '12px', marginBottom: '6px' }}>
-            {line.substring(4)}
-          </h4>
+          <code
+            key={pIdx}
+            style={{
+              padding: '2px 6px',
+              borderRadius: '4px',
+              background: 'rgba(255,255,255,0.08)',
+              color: '#F5D061',
+              fontSize: '0.88em',
+              fontFamily: 'monospace',
+            }}
+          >
+            {part.slice(1, -1)}
+          </code>
         );
       }
-      // Heading 2 / ##
-      if (line.startsWith('## ')) {
-        return (
-          <h3 key={lIdx} style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--accent-gold)', marginTop: '14px', marginBottom: '8px' }}>
-            {line.substring(3)}
-          </h3>
+      return part;
+    });
+  };
+
+  // Format full markdown safely (headings, lists, blockquotes, tables, paragraphs)
+  const formatContent = (rawText: string) => {
+    const lines = rawText.split('\n');
+    const elements: React.ReactNode[] = [];
+    let tableBuffer: string[] = [];
+
+    const flushTable = (key: number) => {
+      if (tableBuffer.length === 0) return null;
+      const rows = tableBuffer
+        .filter((l) => !l.match(/^\s*\|?\s*[-:]+[-| :]*\s*\|?\s*$/)) // filter separator row like |---|---|
+        .map((l) =>
+          l
+            .split('|')
+            .map((c) => c.trim())
+            .filter((c, idx, arr) => (idx !== 0 && idx !== arr.length - 1) || c.length > 0)
         );
-      }
-      // Bullet list item
-      if (line.startsWith('* ') || line.startsWith('- ')) {
-        return (
-          <li key={lIdx} style={{ marginLeft: '18px', marginBottom: '4px', lineHeight: 1.5 }}>
-            {line.substring(2)}
-          </li>
-        );
-      }
-      // Empty line
-      if (!line.trim()) {
-        return <div key={lIdx} style={{ height: '8px' }} />;
+
+      if (rows.length === 0) {
+        tableBuffer = [];
+        return null;
       }
 
-      return (
-        <p key={lIdx} style={{ marginBottom: '6px', lineHeight: 1.6 }}>
-          {line}
+      const headers = rows[0];
+      const bodyRows = rows.slice(1);
+
+      const tableEl = (
+        <div
+          key={`table-${key}`}
+          style={{
+            width: '100%',
+            overflowX: 'auto',
+            margin: '12px 0',
+            borderRadius: '8px',
+            border: '1px solid var(--border-medium, rgba(245, 208, 97, 0.2))',
+            background: 'rgba(0, 0, 0, 0.35)',
+          }}
+        >
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              textAlign: 'left',
+              fontSize: '0.88em',
+            }}
+          >
+            {headers && headers.length > 0 && (
+              <thead>
+                <tr style={{ background: 'rgba(245, 208, 97, 0.12)', borderBottom: '1px solid var(--border-medium)' }}>
+                  {headers.map((h, hIdx) => (
+                    <th key={hIdx} style={{ padding: '8px 12px', color: 'var(--accent-gold)', fontWeight: 600 }}>
+                      {parseInlineMarkdown(h)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {bodyRows.map((row, rIdx) => (
+                <tr
+                  key={rIdx}
+                  style={{
+                    borderBottom: rIdx !== bodyRows.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                    background: rIdx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                  }}
+                >
+                  {row.map((cell, cIdx) => (
+                    <td key={cIdx} style={{ padding: '8px 12px', verticalAlign: 'top', color: '#E2E8F0' }}>
+                      {parseInlineMarkdown(cell)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+
+      tableBuffer = [];
+      return tableEl;
+    };
+
+    lines.forEach((line, lIdx) => {
+      // If line is part of a markdown table
+      if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+        tableBuffer.push(line);
+        return;
+      }
+
+      // If we were accumulating table lines and now hit a non-table line
+      if (tableBuffer.length > 0) {
+        const t = flushTable(lIdx);
+        if (t) elements.push(t);
+      }
+
+      // Heading 3 / ###
+      if (line.startsWith('### ')) {
+        elements.push(
+          <h4 key={lIdx} style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--accent-gold)', marginTop: '12px', marginBottom: '6px' }}>
+            {parseInlineMarkdown(line.substring(4))}
+          </h4>
+        );
+        return;
+      }
+
+      // Heading 2 / ##
+      if (line.startsWith('## ')) {
+        elements.push(
+          <h3 key={lIdx} style={{ fontSize: '1.18rem', fontWeight: 700, color: 'var(--accent-gold)', marginTop: '14px', marginBottom: '8px' }}>
+            {parseInlineMarkdown(line.substring(3))}
+          </h3>
+        );
+        return;
+      }
+
+      // Blockquote / >
+      if (line.startsWith('> ')) {
+        elements.push(
+          <blockquote
+            key={lIdx}
+            style={{
+              margin: '8px 0',
+              padding: '6px 12px',
+              borderLeft: '3px solid var(--accent-gold)',
+              background: 'rgba(245, 208, 97, 0.08)',
+              borderRadius: '0 6px 6px 0',
+              color: '#F1F5F9',
+              fontStyle: 'italic',
+            }}
+          >
+            {parseInlineMarkdown(line.substring(2))}
+          </blockquote>
+        );
+        return;
+      }
+
+      // Bullet list item
+      if (line.startsWith('* ') || line.startsWith('- ') || line.startsWith('• ')) {
+        elements.push(
+          <li key={lIdx} style={{ marginLeft: '18px', marginBottom: '4px', lineHeight: 1.5, color: '#F1F5F9' }}>
+            {parseInlineMarkdown(line.substring(2))}
+          </li>
+        );
+        return;
+      }
+
+      // Empty line
+      if (!line.trim()) {
+        elements.push(<div key={lIdx} style={{ height: '8px' }} />);
+        return;
+      }
+
+      // Regular paragraph
+      elements.push(
+        <p key={lIdx} style={{ marginBottom: '6px', lineHeight: 1.6, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+          {parseInlineMarkdown(line)}
         </p>
       );
     });
+
+    if (tableBuffer.length > 0) {
+      const t = flushTable(lines.length);
+      if (t) elements.push(t);
+    }
+
+    return elements;
   };
 
   return (
@@ -57,8 +215,11 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => 
         display: 'flex',
         flexDirection: 'column',
         alignItems: isUser ? 'flex-end' : 'flex-start',
-        marginBottom: '20px',
+        marginBottom: '18px',
         width: '100%',
+        maxWidth: '100%',
+        minWidth: 0,
+        boxSizing: 'border-box',
       }}
     >
       <div
@@ -66,9 +227,11 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => 
           display: 'flex',
           alignItems: 'flex-start',
           gap: '10px',
-          maxWidth: isUser ? '82%' : '98%',
+          maxWidth: isUser ? 'min(82%, 680px)' : '100%',
           width: isUser ? 'auto' : '100%',
           flexDirection: isUser ? 'row-reverse' : 'row',
+          boxSizing: 'border-box',
+          minWidth: 0,
         }}
       >
         {/* Avatar */}
@@ -95,7 +258,9 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => 
         <div
           style={{
             flex: isUser ? undefined : 1,
-            padding: '14px 20px',
+            minWidth: 0,
+            maxWidth: '100%',
+            padding: '12px 18px',
             borderRadius: isUser ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
             background: isUser
               ? 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)'
@@ -108,6 +273,9 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => 
             fontSize: 'inherit',
             lineHeight: 1.65,
             backdropFilter: 'blur(8px)',
+            wordBreak: 'break-word',
+            overflowWrap: 'anywhere',
+            boxSizing: 'border-box',
           }}
         >
           {/* Point & Ask Badge if present */}
