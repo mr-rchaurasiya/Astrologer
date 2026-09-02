@@ -7,23 +7,25 @@ export class OpenAIProvider implements AIProvider {
   public name = 'openai';
   private client: OpenAI | null = null;
   private model: string;
+  private isGroq: boolean = false;
+  private isOpenRouter: boolean = false;
 
   constructor(apiKey?: string, model?: string, baseURL?: string) {
-    const key = apiKey || process.env.OPENAI_API_KEY || process.env.AI_API_KEY || config.ai.apiKey;
-    const isGroq = key && key.startsWith('gsk_');
-    const isOpenRouter = key && key.startsWith('sk-or-');
+    const key = apiKey || process.env.OPENAI_API_KEY || process.env.AI_API_KEY || process.env.GROQ_API_KEY || config.ai.apiKey;
+    this.isGroq = Boolean(key && key.startsWith('gsk_'));
+    this.isOpenRouter = Boolean(key && key.startsWith('sk-or-'));
 
-    const defaultBaseURL = isGroq
+    const defaultBaseURL = this.isGroq
       ? 'https://api.groq.com/openai/v1'
-      : isOpenRouter
+      : this.isOpenRouter
       ? 'https://openrouter.ai/api/v1'
       : undefined;
 
-    const defaultModel = isGroq
+    const defaultModel = this.isGroq
       ? 'llama-3.3-70b-versatile'
-      : isOpenRouter
+      : this.isOpenRouter
       ? 'meta-llama/llama-3.3-70b-instruct'
-      : config.ai.model;
+      : (config.ai.model || 'gpt-4o-mini');
 
     this.model = model || (config.ai.model && !config.ai.model.startsWith('gpt') ? config.ai.model : defaultModel);
 
@@ -34,6 +36,24 @@ export class OpenAIProvider implements AIProvider {
         timeout: config.ai.requestTimeoutMs,
       });
     }
+  }
+
+  private resolveModel(requestedModel?: string): string {
+    if (this.isGroq) {
+      if (!requestedModel || requestedModel.startsWith('gpt')) {
+        return 'llama-3.3-70b-versatile';
+      }
+      return requestedModel;
+    }
+
+    if (this.isOpenRouter) {
+      if (!requestedModel || requestedModel.startsWith('gpt')) {
+        return 'meta-llama/llama-3.3-70b-instruct';
+      }
+      return requestedModel;
+    }
+
+    return requestedModel || this.model || config.ai.model || 'gpt-4o-mini';
   }
 
   public isAvailable(): boolean {
@@ -131,10 +151,12 @@ export class OpenAIProvider implements AIProvider {
       })),
     ];
 
+    const targetModel = this.resolveModel(params.options?.model);
+
     try {
       const response = await this.client.chat.completions.create(
         {
-          model: this.model,
+          model: targetModel,
           messages: formattedMessages,
           temperature: params.options?.temperature ?? config.ai.temperature,
           max_tokens: params.options?.maxTokens ?? config.ai.maxTokens,
@@ -149,16 +171,17 @@ export class OpenAIProvider implements AIProvider {
       return {
         id: response.id,
         content: choice?.message?.content || '',
-        model: response.model,
+        model: response.model || targetModel,
         finishReason: choice?.finish_reason || 'stop',
         createdAt: new Date(response.created * 1000),
       };
     } catch (error: any) {
+      console.error('OpenAI/Groq provider generateResponse error:', error?.message || error);
       const fallback = this.generateVedicInterpretation(lastUserMessage, params.systemPrompt);
       return {
         id: `fallback-${Date.now()}`,
         content: fallback,
-        model: this.model,
+        model: targetModel,
         finishReason: 'stop',
         createdAt: new Date(),
       };
@@ -180,7 +203,7 @@ export class OpenAIProvider implements AIProvider {
       return {
         id: `jyotish-${Date.now()}`,
         content,
-        model: this.model,
+        model: this.resolveModel(params.options?.model),
         finishReason: 'stop',
         createdAt: new Date(),
       };
@@ -197,11 +220,12 @@ export class OpenAIProvider implements AIProvider {
     let fullContent = '';
     let responseId = `stream-${Date.now()}`;
     let finishReason = 'stop';
+    const targetModel = this.resolveModel(params.options?.model);
 
     try {
       const stream = await this.client.chat.completions.create(
         {
-          model: this.model,
+          model: targetModel,
           messages: formattedMessages,
           temperature: params.options?.temperature ?? config.ai.temperature,
           max_tokens: params.options?.maxTokens ?? config.ai.maxTokens,
@@ -236,17 +260,18 @@ export class OpenAIProvider implements AIProvider {
       return {
         id: responseId,
         content: fullContent,
-        model: this.model,
+        model: targetModel,
         finishReason,
         createdAt: new Date(),
       };
     } catch (error: any) {
+      console.error('OpenAI/Groq provider streamResponse error:', error?.message || error);
       const fallback = this.generateVedicInterpretation(lastUserMessage, params.systemPrompt);
       await params.onChunk({ text: fallback, isFinal: true, finishReason: 'stop' });
       return {
         id: `fallback-${Date.now()}`,
         content: fallback,
-        model: this.model,
+        model: targetModel,
         finishReason: 'stop',
         createdAt: new Date(),
       };

@@ -106,6 +106,7 @@ export interface ChatMessageDTO {
 }
 
 export interface AIRequestOptions {
+  model?: string;
   temperature?: number;
   maxTokens?: number;
   timeoutMs?: number;

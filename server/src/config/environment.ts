@@ -35,9 +35,9 @@ export const config = {
   },
   ai: {
     provider: process.env.AI_PROVIDER || 'openai',
-    apiKey: process.env.AI_API_KEY || '',
-    model: process.env.AI_MODEL || 'gpt-4o-mini',
-    baseUrl: process.env.AI_BASE_URL || '',
+    apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY || '',
+    model: process.env.AI_MODEL || ((process.env.OPENAI_API_KEY || process.env.AI_API_KEY || '').startsWith('gsk_') ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini'),
+    baseUrl: process.env.AI_BASE_URL || ((process.env.OPENAI_API_KEY || process.env.AI_API_KEY || '').startsWith('gsk_') ? 'https://api.groq.com/openai/v1' : ''),
     maxTokens: parseInt(process.env.AI_MAX_TOKENS || '1000', 10),
     temperature: parseFloat(process.env.AI_TEMPERATURE || '0.7'),
     requestTimeoutMs: parseInt(process.env.AI_REQUEST_TIMEOUT || '30000', 10),
