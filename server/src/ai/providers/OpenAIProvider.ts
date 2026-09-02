@@ -22,12 +22,12 @@ export class OpenAIProvider implements AIProvider {
       : undefined;
 
     const defaultModel = this.isGroq
-      ? 'llama-3.3-70b-versatile'
+      ? 'openai/gpt-oss-120b'
       : this.isOpenRouter
       ? 'meta-llama/llama-3.3-70b-instruct'
       : (config.ai.model || 'gpt-4o-mini');
 
-    this.model = model || (config.ai.model && !config.ai.model.startsWith('gpt') ? config.ai.model : defaultModel);
+    this.model = model || (config.ai.model && !config.ai.model.startsWith('gpt-4o') ? config.ai.model : defaultModel);
 
     if (key && key.trim() !== '' && key !== 'mock-key-development') {
       this.client = new OpenAI({
@@ -40,8 +40,8 @@ export class OpenAIProvider implements AIProvider {
 
   private resolveModel(requestedModel?: string): string {
     if (this.isGroq) {
-      if (!requestedModel || requestedModel.startsWith('gpt')) {
-        return 'llama-3.3-70b-versatile';
+      if (!requestedModel || requestedModel.startsWith('gpt-') || requestedModel.includes('llama')) {
+        return 'openai/gpt-oss-120b';
       }
       return requestedModel;
     }
