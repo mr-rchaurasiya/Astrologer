@@ -10,11 +10,10 @@ import {
   Minimize2,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   HelpCircle,
-  PanelLeftClose,
-  PanelLeftOpen,
   Type,
-  Scaling,
 } from 'lucide-react';
 import { ApiClient } from '../services/api';
 import { BirthProfile } from '../types';
@@ -356,10 +355,13 @@ export const ChatPage: React.FC = () => {
                 padding: '6px 8px',
                 color: isSidebarOpen ? 'var(--accent-gold)' : 'var(--text-secondary)',
                 borderColor: isSidebarOpen ? 'var(--border-gold)' : 'var(--border-subtle)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
               }}
               title={isSidebarOpen ? 'Close Sessions Sidebar' : 'Open Sessions Sidebar'}
             >
-              {isSidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+              {isSidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -470,7 +472,7 @@ export const ChatPage: React.FC = () => {
               }}
               title="Adjust Screen Width (Left & Right)"
             >
-              <Scaling size={13} style={{ margin: '0 4px', color: 'var(--text-muted)' }} />
+              <Maximize2 size={13} style={{ margin: '0 4px', color: 'var(--text-muted)' }} />
               {(['normal', 'wide', 'full'] as const).map((w) => (
                 <button
                   key={w}
