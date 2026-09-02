@@ -327,26 +327,17 @@ export const ChatPage: React.FC = () => {
       </div>
 
       {/* Main Split Layout */}
-      <div
-        className="glass-panel"
-        style={{
-          flex: 1,
-          display: 'grid',
-          gridTemplateColumns: '280px 1fr',
-          borderRadius: '16px',
-          border: '1px solid var(--border-medium)',
-          overflow: 'hidden',
-          minHeight: 0,
-        }}
-      >
-        {/* Left Sidebar: Sessions */}
-        <ChatSidebar
-          sessions={sessions}
-          selectedSessionId={currentSessionId}
-          onSelectSession={(id) => setCurrentSessionId(id)}
-          onNewChat={handleNewChat}
-          onDeleteSession={handleDeleteSession}
-        />
+      <div className="glass-panel chat-layout">
+        {/* Left Sidebar: Sessions (Visible on Desktop / Tablet) */}
+        <div className="chat-sidebar-wrapper">
+          <ChatSidebar
+            sessions={sessions}
+            selectedSessionId={currentSessionId}
+            onSelectSession={(id) => setCurrentSessionId(id)}
+            onNewChat={handleNewChat}
+            onDeleteSession={handleDeleteSession}
+          />
+        </div>
 
         {/* Right Main Chat Container */}
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: 'rgba(13, 17, 24, 0.7)' }}>

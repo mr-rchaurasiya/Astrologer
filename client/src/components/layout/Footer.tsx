@@ -3,7 +3,7 @@ import { Shield, Sparkles, Heart } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer style={{ borderTop: '1px solid var(--border-subtle)', background: 'rgba(7, 9, 14, 0.95)', padding: '48px 0 24px 0', marginTop: '80px' }}>
+    <footer className="app-footer">
       <div className="container">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '32px', marginBottom: '40px' }}>
           <div>

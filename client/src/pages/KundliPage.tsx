@@ -236,7 +236,7 @@ export const KundliPage: React.FC = () => {
       {!loadingChart && chart && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           {/* Top 3 Cards Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '20px' }}>
             <BirthDetailsCard
               profileName={selectedProfile?.name}
               relationship={selectedProfile?.relationship}
@@ -248,7 +248,7 @@ export const KundliPage: React.FC = () => {
           </div>
 
           {/* Central Chart & Table Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '24px', alignItems: 'flex-start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '24px', alignItems: 'flex-start' }}>
             {/* Left: Kundli Chart Visualizer with Multi-Style Selector */}
             <Card glow style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
@@ -316,7 +316,7 @@ export const KundliPage: React.FC = () => {
           </div>
 
           {/* House Details & Aspects Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '24px' }}>
             <Card>
               <h3 style={{ fontSize: '1.15rem', marginBottom: '14px' }}>12 Bhavas (Whole Sign Houses)</h3>
               <HouseTable houses={chart.houses} />
@@ -329,7 +329,7 @@ export const KundliPage: React.FC = () => {
           <DashaSection dashas={chart.dashas} profileId={selectedProfileId} />
 
           {/* Daily Panchang & Muhurta */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '24px' }}>
             <PanchangCard
               initialPanchang={chart.panchang}
               latitude={chart.birthInput.latitude}

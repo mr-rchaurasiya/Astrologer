@@ -258,7 +258,7 @@ export const SubscriptionPage: React.FC = () => {
       )}
 
       {/* Pricing Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', maxWidth: '860px', margin: '0 auto 48px auto' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '24px', maxWidth: '860px', margin: '0 auto 48px auto' }}>
         {/* Free Plan */}
         <Card style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', opacity: isPremium ? 0.75 : 1 }}>
           <div>

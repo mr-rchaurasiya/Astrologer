@@ -127,7 +127,7 @@ export const SharedKundliPage: React.FC = () => {
       </div>
 
       {/* Visualizer & Coordinates Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '24px' }}>
         {/* Chart SVG Card */}
         <Card glow style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
