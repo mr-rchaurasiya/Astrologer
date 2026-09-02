@@ -11,6 +11,10 @@ import {
   ChevronDown,
   ChevronUp,
   HelpCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Type,
+  Scaling,
 } from 'lucide-react';
 import { ApiClient } from '../services/api';
 import { BirthProfile } from '../types';
@@ -41,9 +45,14 @@ export const ChatPage: React.FC = () => {
   // Point & Ask State
   const [pointContext, setPointContext] = useState<PointContext | null>(null);
 
-  // UI & View Customization States
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  // Multi-Directional Layout & View Customization States
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [widthMode, setWidthMode] = useState<'normal' | 'wide' | 'full'>('normal');
+  const [textSize, setTextSize] = useState<'sm' | 'md' | 'lg' | 'xl'>('md');
+  const [isZenMode, setIsZenMode] = useState<boolean>(false);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+
+  // Loading & Streaming States
   const [loadingProfiles, setLoadingProfiles] = useState<boolean>(true);
   const [loadingMessages, setLoadingMessages] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -113,7 +122,6 @@ export const ChatPage: React.FC = () => {
         const res = await ApiClient.getChatSessions(selectedProfileId);
         if (res.success && res.data) {
           setSessions(res.data.sessions);
-          // If no session selected or current session belongs to another profile, select latest or clear
           if (res.data.sessions.length > 0 && !pointContext) {
             setCurrentSessionId(res.data.sessions[0].id);
           } else {
@@ -121,15 +129,15 @@ export const ChatPage: React.FC = () => {
             setMessages([]);
           }
         }
-      } catch {
-        // Handle silently
+      } catch (err: any) {
+        console.error('Failed to load chat sessions:', err);
       }
     };
 
     loadSessions();
   }, [selectedProfileId]);
 
-  // 3. Fetch messages whenever currentSessionId changes
+  // 3. Load messages when currentSessionId changes
   useEffect(() => {
     if (!currentSessionId) {
       setMessages([]);
@@ -145,7 +153,7 @@ export const ChatPage: React.FC = () => {
           setMessages(res.data.messages);
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to load conversation history');
+        setError(err.message || 'Failed to load messages');
       } finally {
         setLoadingMessages(false);
       }
@@ -154,12 +162,10 @@ export const ChatPage: React.FC = () => {
     loadMessages();
   }, [currentSessionId]);
 
-  const handleProfileChange = (newProfileId: string) => {
-    setSelectedProfileId(newProfileId);
-    setCurrentSessionId(null);
-    setMessages([]);
+  const handleProfileChange = (profileId: string) => {
+    setSelectedProfileId(profileId);
     setPointContext(null);
-    setSearchParams({ profile: newProfileId });
+    setSearchParams({ profile: profileId });
   };
 
   const handleNewChat = () => {
@@ -173,11 +179,10 @@ export const ChatPage: React.FC = () => {
       await ApiClient.deleteChatSession(sessionId);
       setSessions((prev) => prev.filter((s) => s.id !== sessionId));
       if (currentSessionId === sessionId) {
-        setCurrentSessionId(null);
-        setMessages([]);
+        handleNewChat();
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to delete chat session');
+      setError(err.message || 'Failed to delete session');
     }
   };
 
@@ -185,87 +190,93 @@ export const ChatPage: React.FC = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
+      setIsGenerating(false);
     }
-    setIsGenerating(false);
-    setStreamingText('');
   };
 
-  const handleSendMessage = async (text: string) => {
-    if (!text.trim() || !selectedProfileId) return;
+  const handleSendMessage = async (messageText: string) => {
+    if (!messageText.trim() || !selectedProfileId) return;
 
     setError(null);
     setIsGenerating(true);
     setStreamingText('');
 
-    // Optimistic user message representation
     const tempUserMsg: ChatMessage = {
       id: `temp-${Date.now()}`,
-      sessionId: currentSessionId || 'pending',
+      sessionId: currentSessionId || '',
       userId: '',
       profileId: selectedProfileId,
       role: 'user',
-      content: text,
-      metadata: pointContext ? { selectedPoint: pointContext } : undefined,
+      content: messageText,
+      pointContext: pointContext || undefined,
       createdAt: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, tempUserMsg]);
 
-    abortControllerRef.current = new AbortController();
+    const activePointContext = pointContext;
+    if (pointContext) {
+      setPointContext(null);
+    }
 
     try {
-      // Attempt SSE streaming first
-      let accumulated = '';
-      let serverSessionId = currentSessionId;
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      let fullAssistantResponse = '';
 
       await ApiClient.streamChatMessage(
         {
           profileId: selectedProfileId,
           sessionId: currentSessionId || undefined,
-          message: text,
-          pointContext: pointContext || undefined,
+          message: messageText,
+          pointContext: activePointContext || undefined,
         },
-        (chunk) => {
-          if (chunk.sessionId && !serverSessionId) {
-            serverSessionId = chunk.sessionId;
-            setCurrentSessionId(chunk.sessionId);
-          }
-          if (chunk.text) {
-            accumulated += chunk.text;
-            setStreamingText(accumulated);
-          }
-          if (chunk.isFinal) {
-            setIsGenerating(false);
+        (chunk: string) => {
+          fullAssistantResponse += chunk;
+          setStreamingText(fullAssistantResponse);
+        },
+        (createdSessionId: string) => {
+          if (!currentSessionId) {
+            setCurrentSessionId(createdSessionId);
           }
         },
-        abortControllerRef.current.signal
+        controller.signal
       );
 
-      // Refresh full message list to get server-persisted timestamps and IDs
-      if (serverSessionId) {
-        const msgRes = await ApiClient.getChatMessages(serverSessionId);
+      setIsGenerating(false);
+      setStreamingText('');
+
+      const res = await ApiClient.getChatSessions(selectedProfileId);
+      if (res.success && res.data) {
+        setSessions(res.data.sessions);
+      }
+
+      if (currentSessionId) {
+        const msgRes = await ApiClient.getChatMessages(currentSessionId);
         if (msgRes.success && msgRes.data) {
           setMessages(msgRes.data.messages);
         }
-        // Refresh session list
-        const sessRes = await ApiClient.getChatSessions(selectedProfileId);
-        if (sessRes.success && sessRes.data) {
-          setSessions(sessRes.data.sessions);
-        }
       }
-      setStreamingText('');
-    } catch (err: any) {
-      // Fallback to normal REST send if streaming error or unsupported
+    } catch (streamErr: any) {
+      if (streamErr.name === 'AbortError') {
+        setIsGenerating(false);
+        setStreamingText('');
+        return;
+      }
+
       try {
         const res = await ApiClient.sendChatMessage({
           profileId: selectedProfileId,
           sessionId: currentSessionId || undefined,
-          message: text,
-          pointContext: pointContext || undefined,
+          message: messageText,
+          pointContext: activePointContext || undefined,
         });
 
         if (res.success && res.data) {
-          setCurrentSessionId(res.data.sessionId);
+          if (!currentSessionId) {
+            setCurrentSessionId(res.data.sessionId);
+          }
           setMessages((prev) => [
             ...prev.filter((m) => m.id !== tempUserMsg.id),
             res.data.userMessage,
@@ -279,7 +290,6 @@ export const ChatPage: React.FC = () => {
         }
       } catch (fallbackErr: any) {
         setError(fallbackErr.message || 'Sorry, I could not generate a response right now. Please try again.');
-        // Remove optimistic user message on complete failure
         setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
       } finally {
         setIsGenerating(false);
@@ -288,82 +298,115 @@ export const ChatPage: React.FC = () => {
     }
   };
 
+  const selectedProfile = profiles.find((p) => p.id === selectedProfileId);
+
+  // Determine container max-width based on widthMode
+  const containerMaxWidth =
+    widthMode === 'full' ? '100%' : widthMode === 'wide' ? '1540px' : '1240px';
+
+  // Determine font size style
+  const fontSizeMap = {
+    sm: '0.875rem',
+    md: '0.975rem',
+    lg: '1.125rem',
+    xl: '1.25rem',
+  };
+
   return (
     <div
-      className="container"
       style={{
-        height: 'calc(100vh - 90px)',
+        width: '100%',
+        maxWidth: containerMaxWidth,
+        margin: '0 auto',
+        height: '100%',
+        maxHeight: '100%',
         display: 'flex',
         flexDirection: 'column',
-        paddingTop: '12px',
-        paddingBottom: '12px',
+        padding: widthMode === 'full' ? '6px 12px' : '8px 16px',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+        transition: 'max-width 0.25s ease',
       }}
     >
-      {/* Top Header Bar */}
-      <div
-        className="glass-panel"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px',
-          padding: '10px 18px',
-          borderRadius: '12px',
-          marginBottom: '10px',
-          border: '1px solid var(--border-gold)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              padding: '8px',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, rgba(245, 208, 97, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%)',
-              color: 'var(--accent-gold)',
-            }}
-          >
-            <Sparkles size={18} />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>AI Vedic Astrologer</h2>
-              <Badge variant="gold">Parashari Core</Badge>
-            </div>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-              Grounded strictly in backend deterministic planetary ephemeris
-            </span>
-          </div>
-        </div>
+      {/* Top Header & Customization Controls Bar (Hidden in Zen Mode) */}
+      {!isZenMode && (
+        <div
+          className="glass-panel"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px',
+            padding: '8px 16px',
+            borderRadius: '10px',
+            marginBottom: '8px',
+            border: '1px solid var(--border-gold)',
+            flexShrink: 0,
+          }}
+        >
+          {/* Brand & Layer Info */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Sidebar Open/Close Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="btn btn-outline"
+              style={{
+                padding: '6px 8px',
+                color: isSidebarOpen ? 'var(--accent-gold)' : 'var(--text-secondary)',
+                borderColor: isSidebarOpen ? 'var(--border-gold)' : 'var(--border-subtle)',
+              }}
+              title={isSidebarOpen ? 'Close Sessions Sidebar' : 'Open Sessions Sidebar'}
+            >
+              {isSidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
+            </button>
 
-        {/* Right Header Actions: Profile Selector & Expand View Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {profiles.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="desktop-only" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Active Chart:
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  padding: '6px',
+                  borderRadius: '6px',
+                  background: 'linear-gradient(135deg, rgba(245, 208, 97, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%)',
+                  color: 'var(--accent-gold)',
+                }}
+              >
+                <Sparkles size={16} />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>AI Vedic Astrologer</h2>
+                  <Badge variant="gold">Parashari Core</Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Header Actions & Directional Customizers */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {/* 1. Active Profile Chart Selector */}
+            {profiles.length > 0 && (
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '4px 10px',
-                  borderRadius: '8px',
+                  gap: '5px',
+                  padding: '3px 8px',
+                  borderRadius: '6px',
                   background: 'rgba(255, 255, 255, 0.03)',
                   border: '1px solid var(--border-subtle)',
                 }}
               >
-                <UserIcon size={14} color="var(--accent-gold)" />
+                <UserIcon size={13} color="var(--accent-gold)" />
                 <select
                   className="input-field"
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    padding: '2px 4px',
+                    padding: '2px',
                     color: '#FFF',
                     fontWeight: 600,
-                    fontSize: '0.85rem',
+                    fontSize: '0.82rem',
                     cursor: 'pointer',
                     outline: 'none',
                   }}
@@ -377,41 +420,150 @@ export const ChatPage: React.FC = () => {
                   ))}
                 </select>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Expand / Minimize Reading View Toggle */}
+            {/* 2. Text Size (Top-to-Bottom Readability Zoom) */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px',
+                padding: '2px 4px',
+                borderRadius: '6px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid var(--border-subtle)',
+              }}
+              title="Change Text Size"
+            >
+              <Type size={13} style={{ margin: '0 4px', color: 'var(--text-muted)' }} />
+              {(['sm', 'md', 'lg', 'xl'] as const).map((sz) => (
+                <button
+                  key={sz}
+                  type="button"
+                  onClick={() => setTextSize(sz)}
+                  style={{
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '0.72rem',
+                    fontWeight: textSize === sz ? 700 : 500,
+                    background: textSize === sz ? 'var(--accent-gold)' : 'transparent',
+                    color: textSize === sz ? '#000' : 'var(--text-secondary)',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {sz === 'sm' ? 'S' : sz === 'md' ? 'M' : sz === 'lg' ? 'L' : 'XL'}
+                </button>
+              ))}
+            </div>
+
+            {/* 3. Width Mode (Left-to-Right Horizontal Expander) */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px',
+                padding: '2px 4px',
+                borderRadius: '6px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid var(--border-subtle)',
+              }}
+              title="Adjust Screen Width (Left & Right)"
+            >
+              <Scaling size={13} style={{ margin: '0 4px', color: 'var(--text-muted)' }} />
+              {(['normal', 'wide', 'full'] as const).map((w) => (
+                <button
+                  key={w}
+                  type="button"
+                  onClick={() => setWidthMode(w)}
+                  style={{
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '0.72rem',
+                    fontWeight: widthMode === w ? 700 : 500,
+                    background: widthMode === w ? 'var(--accent-gold)' : 'transparent',
+                    color: widthMode === w ? '#000' : 'var(--text-secondary)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {w}
+                </button>
+              ))}
+            </div>
+
+            {/* 4. Fullscreen / Zen Reading Mode Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsZenMode(true)}
+              className="btn btn-outline"
+              style={{
+                padding: '5px 10px',
+                fontSize: '0.78rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                color: 'var(--text-secondary)',
+              }}
+              title="Fullscreen Zen Mode (Hide all headers for maximum reading space)"
+            >
+              <Maximize2 size={13} />
+              <span className="desktop-only">Fullscreen</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Exit Button when in Zen / Fullscreen Mode */}
+      {isZenMode && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '24px',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
           <button
             type="button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="btn btn-outline"
+            onClick={() => setIsZenMode(false)}
+            className="btn btn-gold"
             style={{
               padding: '6px 12px',
-              fontSize: '0.8rem',
+              fontSize: '0.78rem',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              color: isExpanded ? 'var(--accent-gold)' : 'var(--text-secondary)',
-              borderColor: isExpanded ? 'var(--border-gold)' : 'var(--border-subtle)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
             }}
-            title={isExpanded ? 'Show Sessions Sidebar' : 'Expand Reading Space'}
           >
-            {isExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
-            <span className="desktop-only">{isExpanded ? 'Sidebar View' : 'Full Width'}</span>
+            <Minimize2 size={14} />
+            <span>Exit Fullscreen</span>
           </button>
         </div>
-      </div>
+      )}
 
-      {/* Main Split Layout */}
+      {/* Main Split Layout with Dynamic Columns & Locked Height */}
       <div
-        className="glass-panel chat-layout"
+        className="glass-panel"
         style={{
-          gridTemplateColumns: isExpanded ? '1fr' : undefined,
+          flex: 1,
+          display: 'grid',
+          gridTemplateColumns: isSidebarOpen ? '280px 1fr' : '1fr',
+          borderRadius: '12px',
+          border: '1px solid var(--border-medium)',
+          overflow: 'hidden',
+          minHeight: 0,
+          transition: 'grid-template-columns 0.2s ease',
         }}
       >
-        {/* Left Sidebar: Sessions (Hidden when isExpanded is true or on mobile) */}
-        {!isExpanded && (
-          <div className="chat-sidebar-wrapper">
+        {/* Left Sidebar: Sessions (Controlled by isSidebarOpen) */}
+        {isSidebarOpen && (
+          <div className="chat-sidebar-wrapper" style={{ height: '100%', minHeight: 0, overflow: 'hidden' }}>
             <ChatSidebar
               sessions={sessions}
               selectedSessionId={currentSessionId}
@@ -430,15 +582,16 @@ export const ChatPage: React.FC = () => {
             height: '100%',
             minHeight: 0,
             background: 'rgba(13, 17, 24, 0.7)',
+            fontSize: fontSizeMap[textSize],
           }}
         >
-          {/* Messages Scroll Area - Huge Spacious Viewport */}
+          {/* Messages Scroll Area - Full Vertical Height */}
           <div
             ref={messagesContainerRef}
             style={{
               flex: 1,
               overflowY: 'auto',
-              padding: '20px 24px',
+              padding: '16px 20px',
               minHeight: 0,
             }}
           >
@@ -510,7 +663,7 @@ export const ChatPage: React.FC = () => {
                   interpretations.
                 </p>
 
-                <div style={{ width: '100%', maxWidth: '600px' }}>
+                <div style={{ width: '100%', maxWidth: '640px' }}>
                   <QuickQuestions
                     pointContext={pointContext}
                     onSelectQuestion={(q) => handleSendMessage(q)}
@@ -557,12 +710,13 @@ export const ChatPage: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Bottom Chat Input & Controls (Streamlined & Compact) */}
+          {/* Bottom Chat Input & Controls */}
           <div
             style={{
-              padding: '12px 20px 10px 20px',
+              padding: '10px 18px 8px 18px',
               borderTop: '1px solid var(--border-medium)',
               background: 'rgba(7, 9, 14, 0.95)',
+              flexShrink: 0,
             }}
           >
             {/* Point & Ask Banner */}
@@ -573,7 +727,7 @@ export const ChatPage: React.FC = () => {
 
             {/* Collapsible Suggestions Toggle when conversation is active */}
             {messages.length > 0 && !isGenerating && (
-              <div style={{ marginBottom: '8px' }}>
+              <div style={{ marginBottom: '6px' }}>
                 <button
                   type="button"
                   onClick={() => setShowSuggestions(!showSuggestions)}
@@ -622,13 +776,13 @@ export const ChatPage: React.FC = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '6px',
-                fontSize: '0.7rem',
+                fontSize: '0.68rem',
                 color: 'var(--text-muted)',
-                marginTop: '6px',
+                marginTop: '4px',
                 textAlign: 'center',
               }}
             >
-              <ShieldAlert size={12} />
+              <ShieldAlert size={11} />
               <span>
                 AI responses are traditional Vedic interpretations of calculated chart data for informational purposes.
               </span>

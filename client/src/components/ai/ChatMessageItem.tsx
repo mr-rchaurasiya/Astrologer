@@ -66,7 +66,8 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => 
           display: 'flex',
           alignItems: 'flex-start',
           gap: '10px',
-          maxWidth: '85%',
+          maxWidth: isUser ? '82%' : '98%',
+          width: isUser ? 'auto' : '100%',
           flexDirection: isUser ? 'row-reverse' : 'row',
         }}
       >
@@ -93,7 +94,8 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => 
         {/* Message Bubble */}
         <div
           style={{
-            padding: '14px 18px',
+            flex: isUser ? undefined : 1,
+            padding: '14px 20px',
             borderRadius: isUser ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
             background: isUser
               ? 'linear-gradient(135deg, #4F46E5 0%, #3730A3 100%)'
@@ -103,7 +105,8 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => 
               ? '0 4px 14px rgba(79, 70, 229, 0.25)'
               : '0 4px 16px rgba(0, 0, 0, 0.4)',
             color: '#F8FAFC',
-            fontSize: '0.925rem',
+            fontSize: 'inherit',
+            lineHeight: 1.65,
             backdropFilter: 'blur(8px)',
           }}
         >
