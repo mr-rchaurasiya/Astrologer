@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Sparkles, AlertCircle, Loader2, User as UserIcon, ShieldAlert } from 'lucide-react';
+import {
+  Sparkles,
+  AlertCircle,
+  Loader2,
+  User as UserIcon,
+  ShieldAlert,
+  Maximize2,
+  Minimize2,
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+} from 'lucide-react';
 import { ApiClient } from '../services/api';
 import { BirthProfile } from '../types';
 import { ChatSession, ChatMessage, PointContext } from '../types/ai';
@@ -30,7 +41,9 @@ export const ChatPage: React.FC = () => {
   // Point & Ask State
   const [pointContext, setPointContext] = useState<PointContext | null>(null);
 
-  // UI & Loading States
+  // UI & View Customization States
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const [loadingProfiles, setLoadingProfiles] = useState<boolean>(true);
   const [loadingMessages, setLoadingMessages] = useState<boolean>(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -38,10 +51,16 @@ export const ChatPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   };
 
   useEffect(() => {
@@ -269,10 +288,17 @@ export const ChatPage: React.FC = () => {
     }
   };
 
-  const selectedProfile = profiles.find((p) => p.id === selectedProfileId);
-
   return (
-    <div className="container" style={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', paddingTop: '16px', paddingBottom: '16px' }}>
+    <div
+      className="container"
+      style={{
+        height: 'calc(100vh - 90px)',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: '12px',
+        paddingBottom: '12px',
+      }}
+    >
       {/* Top Header Bar */}
       <div
         className="glass-panel"
@@ -282,70 +308,156 @@ export const ChatPage: React.FC = () => {
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: '12px',
-          padding: '12px 20px',
+          padding: '10px 18px',
           borderRadius: '12px',
-          marginBottom: '14px',
+          marginBottom: '10px',
           border: '1px solid var(--border-gold)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ padding: '8px', borderRadius: '8px', background: 'linear-gradient(135deg, rgba(245, 208, 97, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%)', color: 'var(--accent-gold)' }}>
-            <Sparkles size={20} />
+          <div
+            style={{
+              padding: '8px',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, rgba(245, 208, 97, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%)',
+              color: 'var(--accent-gold)',
+            }}
+          >
+            <Sparkles size={18} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>AI Vedic Astrologer</h2>
-              <Badge variant="gold">Parashari Interpretation Layer</Badge>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>AI Vedic Astrologer</h2>
+              <Badge variant="gold">Parashari Core</Badge>
             </div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
               Grounded strictly in backend deterministic planetary ephemeris
             </span>
           </div>
         </div>
 
-        {/* Profile Selector */}
-        {profiles.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Active Chart:</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-subtle)' }}>
-              <UserIcon size={14} color="var(--accent-gold)" />
-              <select
-                className="input-field"
-                style={{ background: 'transparent', border: 'none', padding: '2px 4px', color: '#FFF', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', outline: 'none' }}
-                value={selectedProfileId}
-                onChange={(e) => handleProfileChange(e.target.value)}
+        {/* Right Header Actions: Profile Selector & Expand View Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {profiles.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="desktop-only" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Active Chart:
+              </span>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid var(--border-subtle)',
+                }}
               >
-                {profiles.map((p) => (
-                  <option key={p.id} value={p.id} style={{ background: '#0D1118', color: '#FFF' }}>
-                    {p.name} {p.isPrimary ? '★' : `(${p.relationship})`}
-                  </option>
-                ))}
-              </select>
+                <UserIcon size={14} color="var(--accent-gold)" />
+                <select
+                  className="input-field"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    padding: '2px 4px',
+                    color: '#FFF',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    outline: 'none',
+                  }}
+                  value={selectedProfileId}
+                  onChange={(e) => handleProfileChange(e.target.value)}
+                >
+                  {profiles.map((p) => (
+                    <option key={p.id} value={p.id} style={{ background: '#0D1118', color: '#FFF' }}>
+                      {p.name} {p.isPrimary ? '★' : `(${p.relationship})`}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Expand / Minimize Reading View Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="btn btn-outline"
+            style={{
+              padding: '6px 12px',
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: isExpanded ? 'var(--accent-gold)' : 'var(--text-secondary)',
+              borderColor: isExpanded ? 'var(--border-gold)' : 'var(--border-subtle)',
+            }}
+            title={isExpanded ? 'Show Sessions Sidebar' : 'Expand Reading Space'}
+          >
+            {isExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+            <span className="desktop-only">{isExpanded ? 'Sidebar View' : 'Full Width'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Split Layout */}
-      <div className="glass-panel chat-layout">
-        {/* Left Sidebar: Sessions (Visible on Desktop / Tablet) */}
-        <div className="chat-sidebar-wrapper">
-          <ChatSidebar
-            sessions={sessions}
-            selectedSessionId={currentSessionId}
-            onSelectSession={(id) => setCurrentSessionId(id)}
-            onNewChat={handleNewChat}
-            onDeleteSession={handleDeleteSession}
-          />
-        </div>
+      <div
+        className="glass-panel chat-layout"
+        style={{
+          gridTemplateColumns: isExpanded ? '1fr' : undefined,
+        }}
+      >
+        {/* Left Sidebar: Sessions (Hidden when isExpanded is true or on mobile) */}
+        {!isExpanded && (
+          <div className="chat-sidebar-wrapper">
+            <ChatSidebar
+              sessions={sessions}
+              selectedSessionId={currentSessionId}
+              onSelectSession={(id) => setCurrentSessionId(id)}
+              onNewChat={handleNewChat}
+              onDeleteSession={handleDeleteSession}
+            />
+          </div>
+        )}
 
         {/* Right Main Chat Container */}
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: 'rgba(13, 17, 24, 0.7)' }}>
-          {/* Messages Scroll Area */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', minHeight: 0 }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            minHeight: 0,
+            background: 'rgba(13, 17, 24, 0.7)',
+          }}
+        >
+          {/* Messages Scroll Area - Huge Spacious Viewport */}
+          <div
+            ref={messagesContainerRef}
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '20px 24px',
+              minHeight: 0,
+            }}
+          >
             {/* Error Alert */}
             {error && (
-              <div style={{ padding: '12px 16px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#FCA5A5', fontSize: '0.875rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#FCA5A5',
+                  fontSize: '0.875rem',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
                 <AlertCircle size={16} flex-shrink="0" />
                 <span>{error}</span>
               </div>
@@ -353,15 +465,49 @@ export const ChatPage: React.FC = () => {
 
             {/* Empty State / Welcome Screen */}
             {messages.length === 0 && !isGenerating && !loadingMessages && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', padding: '20px' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(135deg, rgba(245, 208, 97, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%)', border: '1px solid var(--border-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-gold)', marginBottom: '16px', boxShadow: 'var(--shadow-gold)' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  textAlign: 'center',
+                  padding: '20px',
+                }}
+              >
+                <div
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, rgba(245, 208, 97, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%)',
+                    border: '1px solid var(--border-gold)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--accent-gold)',
+                    marginBottom: '16px',
+                    boxShadow: 'var(--shadow-gold)',
+                  }}
+                >
                   <Sparkles size={32} />
                 </div>
                 <h3 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px' }}>
                   Your Vedic Astrology AI Assistant
                 </h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '520px', lineHeight: 1.6, marginBottom: '24px' }}>
-                  Ask questions about {selectedProfile?.name ? `${selectedProfile.name}'s` : 'your'} calculated Vedic birth chart, planetary dignities, 12 Bhavas, Vimshottari Dashas, and traditional Parashari interpretations.
+                <p
+                  style={{
+                    color: 'var(--text-secondary)',
+                    fontSize: '0.9rem',
+                    maxWidth: '520px',
+                    lineHeight: 1.6,
+                    marginBottom: '24px',
+                  }}
+                >
+                  Ask questions about {selectedProfile?.name ? `${selectedProfile.name}'s` : 'your'} calculated Vedic
+                  birth chart, planetary dignities, 12 Bhavas, Vimshottari Dashas, and traditional Parashari
+                  interpretations.
                 </p>
 
                 <div style={{ width: '100%', maxWidth: '600px' }}>
@@ -376,7 +522,11 @@ export const ChatPage: React.FC = () => {
             {/* Loading Messages Spinner */}
             {loadingMessages && (
               <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                <Loader2 size={28} className="animate-spin" style={{ margin: '0 auto 10px auto', color: 'var(--accent-gold)' }} />
+                <Loader2
+                  size={28}
+                  className="animate-spin"
+                  style={{ margin: '0 auto 10px auto', color: 'var(--accent-gold)' }}
+                />
                 <div>Loading conversation history...</div>
               </div>
             )}
@@ -407,20 +557,55 @@ export const ChatPage: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Bottom Chat Input & Controls */}
-          <div style={{ padding: '16px 24px 12px 24px', borderTop: '1px solid var(--border-medium)', background: 'rgba(7, 9, 14, 0.95)' }}>
+          {/* Bottom Chat Input & Controls (Streamlined & Compact) */}
+          <div
+            style={{
+              padding: '12px 20px 10px 20px',
+              borderTop: '1px solid var(--border-medium)',
+              background: 'rgba(7, 9, 14, 0.95)',
+            }}
+          >
             {/* Point & Ask Banner */}
             <PointAndAskBanner
               pointContext={pointContext}
               onClear={() => setPointContext(null)}
             />
 
-            {/* Quick Questions chips if conversation is active */}
+            {/* Collapsible Suggestions Toggle when conversation is active */}
             {messages.length > 0 && !isGenerating && (
-              <QuickQuestions
-                pointContext={pointContext}
-                onSelectQuestion={(q) => handleSendMessage(q)}
-              />
+              <div style={{ marginBottom: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowSuggestions(!showSuggestions)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: showSuggestions ? 'var(--accent-gold)' : 'var(--text-muted)',
+                    fontSize: '0.78rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '2px 4px',
+                    transition: 'var(--transition-normal)',
+                  }}
+                >
+                  <HelpCircle size={13} />
+                  <span>{showSuggestions ? 'Hide Suggested Questions' : '💡 Suggested Questions (Click to expand)'}</span>
+                  {showSuggestions ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </button>
+                {showSuggestions && (
+                  <div style={{ marginTop: '6px' }}>
+                    <QuickQuestions
+                      pointContext={pointContext}
+                      onSelectQuestion={(q) => {
+                        setShowSuggestions(false);
+                        handleSendMessage(q);
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
             )}
 
             <ChatInput
@@ -431,10 +616,21 @@ export const ChatPage: React.FC = () => {
             />
 
             {/* Subtle Mandatory Disclaimer */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '8px', textAlign: 'center' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                fontSize: '0.7rem',
+                color: 'var(--text-muted)',
+                marginTop: '6px',
+                textAlign: 'center',
+              }}
+            >
               <ShieldAlert size={12} />
               <span>
-                AI responses are traditional Vedic interpretations of calculated chart data for informational purposes. Not a substitute for medical, legal, or financial advice.
+                AI responses are traditional Vedic interpretations of calculated chart data for informational purposes.
               </span>
             </div>
           </div>
