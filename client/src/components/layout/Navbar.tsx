@@ -39,28 +39,78 @@ export const Navbar: React.FC<NavbarProps> = ({ serverStatus = 'checking', onOpe
   };
 
   return (
-    <header style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(7, 9, 14, 0.88)', backdropFilter: 'blur(16px)', borderBottom: '1px solid var(--border-subtle)' }}>
-      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '70px' }}>
+    <header
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        background: 'rgba(7, 9, 14, 0.92)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: '1px solid var(--border-subtle)',
+        padding: '10px 0',
+      }}
+    >
+      <div
+        className="container"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          minHeight: '56px',
+        }}
+      >
         {/* Brand */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-          <div style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '10px',
-            background: 'linear-gradient(135deg, rgba(245, 208, 97, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)',
-            border: '1px solid var(--border-gold)',
+        <Link
+          to="/"
+          style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--accent-gold)',
-          }}>
+            gap: '12px',
+            textDecoration: 'none',
+            padding: '4px 0',
+          }}
+        >
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, rgba(245, 208, 97, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)',
+              border: '1px solid var(--border-gold)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--accent-gold)',
+              flexShrink: 0,
+            }}
+          >
             <Sparkles size={20} />
           </div>
-          <div>
-            <div className="font-serif" style={{ fontSize: '1.2rem', fontWeight: 700, letterSpacing: '0.04em', color: '#FFF' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div
+              className="font-serif"
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                color: '#FFF',
+                lineHeight: 1.25,
+                whiteSpace: 'nowrap',
+              }}
+            >
               ASTROLOGER<span style={{ color: 'var(--accent-gold)' }}> AI</span>
             </div>
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            <div
+              style={{
+                fontSize: '0.68rem',
+                color: 'var(--text-muted)',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                lineHeight: 1.2,
+                marginTop: '2px',
+              }}
+            >
               Vedic Astrology Platform
             </div>
           </div>
