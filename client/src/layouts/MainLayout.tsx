@@ -8,13 +8,15 @@ import { PWAUpdatePrompt } from '../components/pwa/PWAUpdatePrompt';
 import { InstallAppPrompt } from '../components/pwa/InstallAppPrompt';
 import { MobileBottomNav } from '../components/layout/MobileBottomNav';
 import { MobileDrawer } from '../components/layout/MobileDrawer';
+import { CosmicBackground } from '../components/layout/CosmicBackground';
 
 export const MainLayout: React.FC = () => {
   const { status } = useHealth();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <CosmicBackground />
       <OfflineBanner />
       <Navbar serverStatus={status} onOpenDrawer={() => setIsDrawerOpen(true)} />
       <main style={{ flex: 1, paddingBottom: '70px' }}>
