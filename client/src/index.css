@@ -124,6 +124,7 @@ h4, h5, h6, .font-sans {
 .text-gradient-gold {
   background: linear-gradient(135deg, #FFF6D1 0%, #F5D061 50%, #D4AF37 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

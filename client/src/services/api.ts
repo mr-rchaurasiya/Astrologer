@@ -111,6 +111,9 @@ export class ApiClient {
 
       return data;
     } catch (error: any) {
+      if (error?.message === 'Failed to fetch' || (error instanceof TypeError && error.message?.includes('fetch'))) {
+        throw new Error('Unable to connect to server. If the server is starting up, please wait a moment and try again.');
+      }
       throw error;
     }
   }

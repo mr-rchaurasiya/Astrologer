@@ -35,3 +35,7 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Storage
+storage/reports/*.pdf
+server/storage/reports/*.pdf

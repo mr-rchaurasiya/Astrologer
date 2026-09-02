@@ -29,21 +29,29 @@ export const createApp = (): Express => {
 
   // Dynamic Origin CORS Configuration
   const allowedOriginsSet = new Set(config.allowedOrigins);
-  // Always permit local development origins in test/dev
   if (!config.isProd) {
     allowedOriginsSet.add('http://localhost:5173');
     allowedOriginsSet.add('http://127.0.0.1:5173');
     allowedOriginsSet.add('http://localhost:3000');
   }
 
+  const isOriginAllowed = (origin?: string): boolean => {
+    if (!origin) return true;
+    if (allowedOriginsSet.has(origin)) return true;
+    // Allow all Vercel deployments (*.vercel.app)
+    if (/^https:\/\/[a-zA-Z0-9-_.]+\.vercel\.app$/.test(origin)) return true;
+    // Allow localhost/127.0.0.1 on any port in development
+    if (!config.isProd && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+    return false;
+  };
+
   app.use(
     cors({
       origin: (origin, callback) => {
-        // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-        if (!origin || allowedOriginsSet.has(origin)) {
+        if (isOriginAllowed(origin)) {
           callback(null, true);
         } else {
-          callback(new Error(`CORS blocked request from origin: ${origin}`));
+          callback(null, false);
         }
       },
       credentials: true,

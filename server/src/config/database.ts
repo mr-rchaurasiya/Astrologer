@@ -7,9 +7,9 @@ let memoryServer: any = null;
 export const MONGO_OPTIONS: ConnectOptions = {
   maxPoolSize: 50,
   minPoolSize: 5,
-  serverSelectionTimeoutMS: 2500,
+  serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
-  connectTimeoutMS: 3000,
+  connectTimeoutMS: 10000,
   heartbeatFrequencyMS: 10000,
   retryWrites: true,
   retryReads: true,
