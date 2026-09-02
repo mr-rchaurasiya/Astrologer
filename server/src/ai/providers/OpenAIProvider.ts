@@ -10,12 +10,27 @@ export class OpenAIProvider implements AIProvider {
 
   constructor(apiKey?: string, model?: string, baseURL?: string) {
     const key = apiKey || process.env.OPENAI_API_KEY || process.env.AI_API_KEY || config.ai.apiKey;
-    this.model = model || config.ai.model;
+    const isGroq = key && key.startsWith('gsk_');
+    const isOpenRouter = key && key.startsWith('sk-or-');
+
+    const defaultBaseURL = isGroq
+      ? 'https://api.groq.com/openai/v1'
+      : isOpenRouter
+      ? 'https://openrouter.ai/api/v1'
+      : undefined;
+
+    const defaultModel = isGroq
+      ? 'llama-3.3-70b-versatile'
+      : isOpenRouter
+      ? 'meta-llama/llama-3.3-70b-instruct'
+      : config.ai.model;
+
+    this.model = model || (config.ai.model && !config.ai.model.startsWith('gpt') ? config.ai.model : defaultModel);
 
     if (key && key.trim() !== '' && key !== 'mock-key-development') {
       this.client = new OpenAI({
         apiKey: key,
-        baseURL: (baseURL || config.ai.baseUrl) || undefined,
+        baseURL: baseURL || config.ai.baseUrl || defaultBaseURL,
         timeout: config.ai.requestTimeoutMs,
       });
     }
