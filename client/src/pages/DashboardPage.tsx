@@ -73,7 +73,7 @@ export const DashboardPage: React.FC = () => {
             <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>
               Welcome back, <span className="text-gradient-gold">{user?.name}</span>
             </h1>
-            <Badge variant="gold">Phase 6 Engine Active</Badge>
+            <Badge variant="gold">Vedic Intelligence Live</Badge>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '4px' }}>
             Advanced Vedic Astrology Analytics, Life Trajectory Curve & AI Consultations

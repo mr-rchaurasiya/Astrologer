@@ -68,7 +68,7 @@ export const Navbar: React.FC<NavbarProps> = ({ serverStatus = 'checking', onOpe
 
         {/* Navigation Items (Only when authenticated) */}
         {isAuthenticated ? (
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <nav className="desktop-only" style={{ alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <Link
               to="/dashboard"
               style={{
@@ -270,7 +270,7 @@ export const Navbar: React.FC<NavbarProps> = ({ serverStatus = 'checking', onOpe
               </Link>
               <button
                 onClick={handleLogout}
-                className="hidden md:inline-flex btn btn-outline"
+                className="desktop-only btn btn-outline"
                 style={{ padding: '6px 10px', fontSize: '0.8rem', color: '#FCA5A5', borderColor: 'rgba(239, 68, 68, 0.3)' }}
                 title="Sign Out"
               >
@@ -280,7 +280,7 @@ export const Navbar: React.FC<NavbarProps> = ({ serverStatus = 'checking', onOpe
                 <button
                   type="button"
                   onClick={onOpenDrawer}
-                  className="md:hidden btn btn-outline"
+                  className="mobile-only btn btn-outline"
                   style={{ padding: '6px 10px', fontSize: '0.8rem', color: 'var(--accent-gold)' }}
                   aria-label="Open Menu Drawer"
                 >

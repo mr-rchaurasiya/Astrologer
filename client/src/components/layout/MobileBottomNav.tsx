@@ -16,66 +16,64 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenDrawer }
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav
-      aria-label="Mobile Bottom Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-lg border-t border-slate-800/80 px-2 py-1.5 flex items-center justify-around shadow-2xl safe-area-pb"
-      style={{ minHeight: '56px' }}
-    >
+    <nav aria-label="Mobile Bottom Navigation" className="mobile-bottom-nav">
       <Link
         to="/dashboard"
         aria-label="Dashboard"
-        className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors ${
-          isActive('/dashboard') ? 'text-amber-400 font-bold' : 'text-slate-400 hover:text-slate-200'
-        }`}
+        className={`mobile-nav-item ${isActive('/dashboard') ? 'active' : ''}`}
       >
-        <LayoutDashboard className="w-5 h-5 mb-0.5" />
-        <span className="text-[10px] tracking-tight">Home</span>
+        <LayoutDashboard size={20} />
+        <span>Home</span>
       </Link>
 
       <Link
         to="/kundli"
         aria-label="Kundli Chart"
-        className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors ${
-          isActive('/kundli') ? 'text-amber-400 font-bold' : 'text-slate-400 hover:text-slate-200'
-        }`}
+        className={`mobile-nav-item ${isActive('/kundli') ? 'active' : ''}`}
       >
-        <Compass className="w-5 h-5 mb-0.5" />
-        <span className="text-[10px] tracking-tight">Kundli</span>
+        <Compass size={20} />
+        <span>Kundli</span>
       </Link>
 
       <Link
         to="/chat"
         aria-label="AI Astrologer Chat"
-        className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors ${
-          isActive('/chat') ? 'text-amber-400 font-bold' : 'text-slate-400 hover:text-slate-200'
-        }`}
+        className={`mobile-nav-item ${isActive('/chat') ? 'active' : ''}`}
       >
-        <div className="relative">
-          <MessageSquare className="w-5 h-5 mb-0.5" />
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+        <div style={{ position: 'relative', display: 'inline-flex' }}>
+          <MessageSquare size={20} />
+          <span
+            style={{
+              position: 'absolute',
+              top: '-2px',
+              right: '-4px',
+              width: '7px',
+              height: '7px',
+              backgroundColor: 'var(--accent-gold)',
+              borderRadius: '50%',
+            }}
+          />
         </div>
-        <span className="text-[10px] tracking-tight">AI Chat</span>
+        <span>AI Chat</span>
       </Link>
 
       <Link
         to="/reports"
         aria-label="Astrology Reports"
-        className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg transition-colors ${
-          isActive('/reports') ? 'text-amber-400 font-bold' : 'text-slate-400 hover:text-slate-200'
-        }`}
+        className={`mobile-nav-item ${isActive('/reports') ? 'active' : ''}`}
       >
-        <FileText className="w-5 h-5 mb-0.5" />
-        <span className="text-[10px] tracking-tight">Reports</span>
+        <FileText size={20} />
+        <span>Reports</span>
       </Link>
 
       <button
         type="button"
         onClick={onOpenDrawer}
         aria-label="Open More Menu"
-        className="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] rounded-lg text-slate-400 hover:text-slate-200 transition-colors"
+        className="mobile-nav-item"
       >
-        <Menu className="w-5 h-5 mb-0.5" />
-        <span className="text-[10px] tracking-tight">More</span>
+        <Menu size={20} />
+        <span>More</span>
       </button>
     </nav>
   );

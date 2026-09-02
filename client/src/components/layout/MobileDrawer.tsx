@@ -38,29 +38,37 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex justify-end animate-fade-in">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
+    <div className="mobile-drawer-overlay" onClick={onClose}>
       {/* Drawer Panel */}
       <aside
         aria-label="Mobile Navigation Menu"
-        className="relative w-[280px] max-w-[80vw] h-full bg-slate-950 border-l border-slate-800 p-5 flex flex-col justify-between shadow-2xl z-10 overflow-y-auto"
+        className="mobile-drawer-panel"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <Sparkles className="w-4 h-4" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'rgba(245, 208, 97, 0.15)',
+                  border: '1px solid var(--border-gold)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--accent-gold)',
+                }}
+              >
+                <Sparkles size={18} />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white leading-none">Menu</h4>
-                <span className="text-[11px] text-slate-400 truncate max-w-[140px] block mt-0.5">
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>
+                  Menu
+                </h4>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {user?.email}
                 </span>
               </div>
@@ -69,56 +77,67 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
               type="button"
               onClick={onClose}
               aria-label="Close Menu"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-colors"
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '8px',
+                color: 'var(--text-secondary)',
+                padding: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <X className="w-5 h-5" />
+              <X size={18} />
             </button>
           </div>
 
           {/* Links */}
-          <nav className="space-y-1">
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <button
               type="button"
               onClick={() => handleNav('/analytics')}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-900 transition-colors text-left"
+              className="drawer-link"
             >
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <TrendingUp size={18} style={{ color: 'var(--color-success)' }} />
               <span>Life Curve Analytics</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleNav('/saved-consultations')}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-900 transition-colors text-left"
+              className="drawer-link"
             >
-              <Bookmark className="w-4 h-4 text-sky-400" />
+              <Bookmark size={18} style={{ color: 'var(--accent-cyan)' }} />
               <span>Saved Consultations</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleNav('/referrals')}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-900 transition-colors text-left"
+              className="drawer-link"
             >
-              <Gift className="w-4 h-4 text-purple-400" />
+              <Gift size={18} style={{ color: 'var(--accent-purple)' }} />
               <span>Referrals & Rewards</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleNav('/subscription')}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-amber-300 hover:bg-amber-500/10 transition-colors text-left font-medium"
+              className="drawer-link"
+              style={{ color: 'var(--accent-gold)' }}
             >
-              <Zap className="w-4 h-4 text-amber-400" />
+              <Zap size={18} style={{ color: 'var(--accent-gold)' }} />
               <span>{isPremium ? 'Manage Subscription' : 'Upgrade to Premium'}</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleNav('/settings')}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-900 transition-colors text-left"
+              className="drawer-link"
             >
-              <Settings className="w-4 h-4 text-slate-400" />
+              <Settings size={18} style={{ color: 'var(--text-muted)' }} />
               <span>Settings & Preferences</span>
             </button>
 
@@ -126,9 +145,10 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
               <button
                 type="button"
                 onClick={() => handleNav('/admin')}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-rose-300 hover:bg-rose-950/30 transition-colors text-left font-medium"
+                className="drawer-link"
+                style={{ color: '#FCA5A5' }}
               >
-                <ShieldCheck className="w-4 h-4 text-rose-400" />
+                <ShieldCheck size={18} style={{ color: '#EF4444' }} />
                 <span>Admin Dashboard</span>
               </button>
             )}
@@ -136,13 +156,14 @@ export const MobileDrawer: React.FC<MobileDrawerProps> = ({ isOpen, onClose }) =
         </div>
 
         {/* Footer with Logout */}
-        <div className="border-t border-slate-800 pt-4">
+        <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-rose-400 hover:bg-rose-950/20 transition-colors"
+            className="drawer-link"
+            style={{ color: '#F87171' }}
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut size={18} />
             <span>Sign Out</span>
           </button>
         </div>
